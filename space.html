@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Space Invaders</title>
+
+<style>
+body{
+margin:0;
+background:black;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+#score{
+position:absolute;
+top:10px;
+left:10px;
+font-size:20px;
+}
+
+canvas{
+background:black;
+display:block;
+margin:auto;
+}
+
+#controls{
+position:fixed;
+bottom:20px;
+width:100%;
+display:flex;
+justify-content:center;
+gap:20px;
+}
+
+button{
+width:80px;
+height:60px;
+font-size:20px;
+border:none;
+border-radius:10px;
+background:#333;
+color:white;
+}
+</style>
+</head>
+
+<body>
+
+<div id="score">Score: 0</div>
+
+<canvas id="game" width="600" height="500"></canvas>
+
+<div id="controls">
+<button id="left">◀</button>
+<button id="shoot">▲</button>
+<button id="right">▶</button>
+</div>
+
+<script>
+
+const canvas = document.getElementById("game")
+const ctx = canvas.getContext("2d")
+
+let score = 0
+
+const player = {
+x:280,
+y:450,
+width:40,
+height:20,
+speed:6
+}
+
+let bullets = []
+
+let enemies = []
+
+function spawnEnemies(){
+for(let i=0;i<8;i++){
+enemies.push({
+x:60*i+40,
+y:40,
+width:30,
+height:20,
+alive:true
+})
+}
+}
+
+spawnEnemies()
+
+let enemyDirection = 1
+
+function drawPlayer(){
+ctx.fillStyle="lime"
+ctx.fillRect(player.x,player.y,player.width,player.height)
+}
+
+function drawBullets(){
+ctx.fillStyle="white"
+bullets.forEach(b=>{
+ctx.fillRect(b.x,b.y,4,10)
+})
+}
+
+function drawEnemies(){
+ctx.fillStyle="red"
+enemies.forEach(e=>{
+if(e.alive)
+ctx.fillRect(e.x,e.y,e.width,e.height)
+})
+}
+
+function updateBullets(){
+
+bullets.forEach(b=>{
+b.y -= 7
+})
+
+bullets = bullets.filter(b => b.y > 0)
+
+}
+
+function updateEnemies(){
+
+let hitEdge = false
+
+enemies.forEach(e=>{
+if(!e.alive) return
+
+e.x += enemyDirection*2
+
+if(e.x < 0 || e.x > canvas.width-30){
+hitEdge = true
+}
+})
+
+if(hitEdge){
+
+enemyDirection *= -1
+
+enemies.forEach(e=>{
+e.y += 20
+})
+
+}
+
+}
+
+function checkCollision(){
+
+bullets.forEach(b=>{
+enemies.forEach(e=>{
+
+if(!e.alive) return
+
+if(
+b.x < e.x + e.width &&
+b.x + 4 > e.x &&
+b.y < e.y + e.height &&
+b.y + 10 > e.y
+){
+e.alive=false
+b.y=-10
+score++
+document.getElementById("score").textContent="Score: "+score
+}
+
+})
+})
+
+}
+
+function shoot(){
+bullets.push({
+x:player.x+18,
+y:player.y
+})
+}
+
+document.addEventListener("keydown",(e)=>{
+
+if(e.key==="ArrowLeft") player.x -= player.speed
+if(e.key==="ArrowRight") player.x += player.speed
+if(e.key===" ") shoot()
+
+})
+
+document.getElementById("left").onclick=()=>{
+player.x -= player.speed*3
+}
+
+document.getElementById("right").onclick=()=>{
+player.x += player.speed*3
+}
+
+document.getElementById("shoot").onclick=()=>{
+shoot()
+}
+
+function gameLoop(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+drawPlayer()
+drawBullets()
+drawEnemies()
+
+updateBullets()
+updateEnemies()
+checkCollision()
+
+requestAnimationFrame(gameLoop)
+
+}
+
+gameLoop()
+
+</script>
+
+</body>
+</html>
