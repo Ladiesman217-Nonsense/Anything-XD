@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Stick Target Mobile Game</title>
+
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    background:linear-gradient(#87CEEB,#c7f3ff);
+    font-family:Arial;
+}
+
+#score{
+    position:absolute;
+    top:10px;
+    left:10px;
+    font-size:22px;
+    font-weight:bold;
+}
+
+#highscore{
+    position:absolute;
+    top:40px;
+    left:10px;
+    font-size:18px;
+}
+
+#shootBtn{
+    position:absolute;
+    bottom:30px;
+    right:30px;
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    border:none;
+    background:red;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+}
+
+canvas{
+    display:block;
+}
+</style>
+</head>
+
+<body>
+
+<div id="score">Score: 0</div>
+<div id="highscore">High Score: 10</div>
+
+<button id="shootBtn">SHOOT</button>
+
+<canvas id="game"></canvas>
+
+<script>
+
+const canvas = document.getElementById("game")
+const ctx = canvas.getContext("2d")
+
+canvas.width = window.innerWidth
+canvas.height = window.innerHeight
+
+let score = 0
+let highScore = 10
+
+let target = {
+    x:100,
+    y:300,
+    speed:3,
+    alive:true
+}
+
+function shoot(x,y){
+
+    if(!target.alive) return
+
+    const dx = x - target.x
+    const dy = y - target.y
+    const dist = Math.sqrt(dx*dx + dy*dy)
+
+    if(dist < 40){
+        score++
+        document.getElementById("score").textContent = "Score: " + score
+
+        target.x = Math.random()*canvas.width
+        target.y = 200 + Math.random()*300
+    }
+
+    if(score >= highScore){
+        target.alive = false
+    }
+
+}
+
+/* tap on screen */
+canvas.addEventListener("click",(e)=>{
+    shoot(e.clientX,e.clientY)
+})
+
+/* mobile tap */
+canvas.addEventListener("touchstart",(e)=>{
+    const touch = e.touches[0]
+    shoot(touch.clientX,touch.clientY)
+})
+
+/* shoot button */
+document.getElementById("shootBtn").addEventListener("click",()=>{
+    shoot(target.x,target.y)
+})
+
+function drawStickman(x,y,fallen=false){
+
+    ctx.strokeStyle="black"
+    ctx.lineWidth=3
+    ctx.beginPath()
+
+    if(!fallen){
+
+        ctx.arc(x,y-30,10,0,Math.PI*2)
+        ctx.moveTo(x,y-20)
+        ctx.lineTo(x,y+20)
+        ctx.moveTo(x,y)
+        ctx.lineTo(x-20,y+10)
+        ctx.moveTo(x,y)
+        ctx.lineTo(x+20,y+10)
+        ctx.moveTo(x,y+20)
+        ctx.lineTo(x-15,y+40)
+        ctx.moveTo(x,y+20)
+        ctx.lineTo(x+15,y+40)
+
+    }else{
+
+        ctx.arc(x,y,10,0,Math.PI*2)
+        ctx.moveTo(x,y)
+        ctx.lineTo(x+40,y)
+
+    }
+
+    ctx.stroke()
+}
+
+function update(){
+
+    ctx.clearRect(0,0,canvas.width,canvas.height)
+
+    if(target.alive){
+
+        target.x += target.speed
+
+        if(target.x > canvas.width || target.x < 0){
+            target.speed *= -1
+        }
+
+        drawStickman(target.x,target.y)
+
+    }else{
+
+        drawStickman(target.x,target.y,true)
+
+        ctx.fillStyle="green"
+        ctx.font="30px Arial"
+        ctx.fillText("High Score Reached!", canvas.width/2-150,100)
+
+    }
+
+    requestAnimationFrame(update)
+}
+
+update()
+
+</script>
+
+</body>
+</html>
